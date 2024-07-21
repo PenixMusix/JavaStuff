@@ -1,0 +1,258 @@
+import java.util.Collections;
+import java.util.ArrayList;
+
+public class WideSearchTree {
+    private final int width;
+    private Node root;
+
+    // Inner class representing a node in the wide search tree
+    private static class Node {
+        private final int[] data;
+        private final Node[] children;
+        private int size;
+
+        public Node(int width) {
+            this.data = new int[width - 1];
+            this.children = new Node[width];
+            this.size = 0;
+        }
+
+        public boolean isFull() {
+            return size == data.length;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder("[");
+            for (int i = 0; i < size; i++) {
+                sb.append(data[i]);
+                if (i < size - 1) sb.append(", ");
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+    }
+
+    // Constructor for the WideSearchTree
+    public WideSearchTree(int width) {
+        this.width = width;
+        this.root = null;
+    }
+
+    // Insert method to add values to the tree
+    public void insert(int x) {
+        if (root == null) {
+            root = new Node(width);
+            root.data[0] = x;
+            root.size = 1;
+        } else {
+            insert(x, root);
+        }
+    }
+
+    // Recursive method to insert value in the correct position
+    private void insert(int x, Node node) {
+        int i = 0;
+        while (i < node.size && node.data[i] < x) {
+            i++;
+        }
+
+        if (i < node.size && node.data[i] == x) {
+            return;
+        }
+
+        if (node.isFull()) {
+            if (node.children[i] != null) {
+                insert(x, node.children[i]);
+
+            } else {
+                node.children[i] = new Node(width);
+                node.children[i].data[0] = x;
+                node.children[i].size = 1;
+            }
+        } else {
+            for (int j = node.size; j > i; j--) {
+                node.data[j] = node.data[j - 1];
+            }
+            node.data[i] = x;
+            node.size++;
+        }
+    }
+
+    // Method to print the tree structure (for debugging purposes)
+    @Override
+    public String toString() {
+        if (root == null) {
+            return "Empty tree";
+        }
+        return toString(root, 0);
+    }
+
+    private String toString(Node node, int level) {
+        StringBuilder ret = new StringBuilder("  ".repeat(level) + node.toString() + "\n");
+        for (Node child : node.children) {
+            if (child != null) {
+                ret.append(toString(child, level + 1));
+            }
+        }
+        return ret.toString();
+    }
+
+    public static WideSearchTree getExample() {
+        WideSearchTree tree = new WideSearchTree(3); // Assuming width is 3
+
+        // Create the root node with values [15, 20]
+        Node rootNode = new Node(tree.width);
+        rootNode.data[0] = 15;
+        rootNode.data[1] = 20;
+        rootNode.size = 2;
+
+        // Create left child node with values [2, 5]
+        Node leftChild = new Node(tree.width);
+        leftChild.data[0] = 2;
+        leftChild.data[1] = 5;
+        leftChild.size = 2;
+
+        // Create middle child node with value [17]
+        Node middleChild = new Node(tree.width);
+        middleChild.data[0] = 17;
+        middleChild.size = 1;
+
+        // Create right child node with values [22, 26]
+        Node rightChild = new Node(tree.width);
+        rightChild.data[0] = 22;
+        rightChild.data[1] = 26;
+        rightChild.size = 2;
+
+        // Link children to the root node
+        rootNode.children[0] = leftChild;
+        rootNode.children[1] = middleChild;
+        rootNode.children[2] = rightChild;
+
+        // Assign the constructed root to the tree
+        tree.root = rootNode;
+
+        return tree;
+    }
+
+    public int height() {
+        return height(root);
+    }
+
+    private int height(Node node) {
+        if (node == null) {
+            return 0;
+        }
+        int maxHeight = 0;
+        for (Node child : node.children) {
+            int childHeight = height(child);
+            if (childHeight > maxHeight) {
+                maxHeight = childHeight;
+            }
+        }
+        return 1 + maxHeight;
+    }
+
+    public boolean contains(int x) {
+        return contains(root, x);
+    }
+
+    private boolean contains(Node node, int x) {
+        if (node == null) {
+            return false;
+        }
+        for (int i = 0; i < node.size; i++) {
+            if (x == node.data[i]) {
+                return true;
+            } else if (x < node.data[i]) {
+                return contains(node.children[i], x);
+            }
+        }
+        return contains(node.children[node.size], x);
+    }
+    public void printInOrder() {
+        printInOrder(root);
+        System.out.println(); // Ensure there's a newline after the output
+    }
+
+    private void printInOrder(Node node) {
+        if (node == null) {
+            return;
+        }
+
+        for (int i = 0; i < node.size; i++) {
+            if (node.children[i] != null) {
+                printInOrder(node.children[i]);
+            }
+            System.out.print(node.data[i] + " ");
+        }
+        if (node.children[node.size] != null) {
+            printInOrder(node.children[node.size]);
+        }
+    }
+
+
+    // Main method for testing
+
+        public static void main(String[] args) {
+            // Task 1: Example Tree
+            WideSearchTree exampleTree = WideSearchTree.getExample(); // Assume getExample correctly sets up the tree
+            System.out.println("Example Tree Structure:");
+            System.out.println(exampleTree);
+            System.out.println("Height of the Example Tree: " + exampleTree.height());
+
+            int[] checkValues = {15, 20, 2, 5, 17, 22, 26, 30};
+            for (int value : checkValues) {
+                System.out.println("Contains " + value + ": " + exampleTree.contains(value));
+            }
+
+            System.out.println("In-order Traversal of Example Tree:");
+            exampleTree.printInOrder();
+            System.out.println();
+
+            // Task 2: Dynamic Tree Creation
+            WideSearchTree dynamicTree = new WideSearchTree(3);
+            for (int value : new int[]{15, 20, 2, 5, 17, 22, 26}) {
+                dynamicTree.insert(value);
+            }
+
+            System.out.println("Tree Structure After Inserts:");
+            System.out.println(dynamicTree);
+            System.out.println("Height of the Tree After Inserts: " + dynamicTree.height());
+
+            for (int value : checkValues) {
+                System.out.println("Contains " + value + ": " + dynamicTree.contains(value));
+            }
+
+            System.out.println("In-order Traversal of Tree After Inserts:");
+            dynamicTree.printInOrder();
+
+            // Task 3: Multiple Tree Creation and Height Calculation
+            int treeCount = 1000;
+            double averageHeight = 0.0;
+            ArrayList<Integer> numbers = new ArrayList<>();
+            for (int i = 0; i < 1000; i++) {
+                numbers.add(i);
+            }
+
+            for (int i = 0; i < treeCount; i++) {
+                Collections.shuffle(numbers);
+                WideSearchTree tree = new WideSearchTree(5);
+                for (int num : numbers) {
+                    tree.insert(num);
+                }
+                averageHeight += tree.height();
+
+                // Optional: Checking containment for the first tree to reduce verbosity
+                if (i == 0) {
+                    for (int num = 0; num <= 999; num++) {
+                        assert tree.contains(num);
+                    }
+                    assert !tree.contains(-1);
+                    assert !tree.contains(1000);
+                }
+            }
+            averageHeight /= treeCount;
+            System.out.println("Average height of 1000 trees: " + averageHeight);
+        }
+    }
